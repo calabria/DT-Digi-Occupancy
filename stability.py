@@ -64,9 +64,10 @@ if __name__ == "__main__":
     output = tf.get_default_graph().get_tensor_by_name('output/Softmax:0')
 
     with open(CSV_NAME, 'w') as file_:
-        file_.write('lumi,faults')
+        file_.write('lumi,total,emerging')
         file_.write("\n")
 
+    p_faults = np.zeros(2721)
     for lumi in range(10, 1000, 10):
         raw_data = np.array([])
         for wheel in range(-2, 3):
@@ -79,8 +80,10 @@ if __name__ == "__main__":
 
         layer_stack = get_layer_stack(raw_data)
         prediction = sess.run(output, {_input: layer_stack})
-        faults = sum(np.argmax(prediction, axis=1))
+        faults = np.argmax(prediction, axis=1)
+        emerging = sum(faults - p_faults == 1)
+        p_faults = faults
 
         with open(CSV_NAME, 'a') as file_:
-            file_.write("%s,%s\n" % (lumi, faults))
+            file_.write("%s,%s,%s\n" % (lumi, sum(faults), emerging))
         print("Tested lumisection %d" % lumi)
